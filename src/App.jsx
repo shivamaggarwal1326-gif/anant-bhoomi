@@ -840,7 +840,7 @@ function DossierPanel({ visible, flightData, progress, phase, onOriginSelect, on
               </span>
             </div>
 
-            {/* Amadeus mode indicator */}
+            {/* Mode indicator */}
             <div style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "5px 10px", marginBottom: 16, borderRadius: 3,
@@ -858,7 +858,7 @@ function DossierPanel({ visible, flightData, progress, phase, onOriginSelect, on
                 letterSpacing: "0.25em", textTransform: "uppercase", fontWeight: 500,
                 color: AMADEUS_KEY ? "rgba(74,222,128,0.6)" : "rgba(184,150,90,0.4)",
               }}>
-                {AMADEUS_KEY ? "Mode: Live Market" : "Mode: Simulation"}
+                {AMADEUS_KEY ? "Mode: Live Market" : "Mode: Simulation (Imperial Corridor)"}
               </span>
             </div>
 
@@ -1038,8 +1038,50 @@ function DossierPanel({ visible, flightData, progress, phase, onOriginSelect, on
         )}
       </div>
 
+      {/* ── Commissioned By — Architect Profiles ── */}
+      <div style={{ padding: "0 28px 12px", flexShrink: 0 }}>
+        <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${C.gold}, transparent)`, opacity: 0.12, marginBottom: 14 }} />
+        <div style={{ fontSize: 9, letterSpacing: "0.3em", color: C.muted, textTransform: "uppercase", marginBottom: 12, fontWeight: 500 }}>
+          Commissioned By
+        </div>
+
+        {/* Architect 1 — Rehesya */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
+            border: `1.5px solid ${C.goldDim}`,
+            background: `linear-gradient(135deg, rgba(184,150,90,0.08), rgba(184,150,90,0.02))`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, color: C.gold, fontWeight: 600 }}>R</span>
+          </div>
+          <div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 12, color: C.goldLight, fontWeight: 500 }}>Rehesya</div>
+            <div style={{ fontSize: 8, color: C.muted, letterSpacing: "0.1em", marginTop: 1 }}>Lead Visionary & Travel Lyricist</div>
+          </div>
+        </div>
+
+        {/* Architect 2 — Aarav */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
+            border: `1.5px solid ${C.goldDim}`,
+            background: `linear-gradient(135deg, rgba(184,150,90,0.08), rgba(184,150,90,0.02))`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, color: C.gold, fontWeight: 600 }}>A</span>
+          </div>
+          <div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 12, color: C.goldLight, fontWeight: 500 }}>Aarav</div>
+            <div style={{ fontSize: 8, color: C.muted, letterSpacing: "0.1em", marginTop: 1 }}>Master of Logistics & Heritage</div>
+          </div>
+        </div>
+      </div>
+
       {/* Footer */}
-      <div style={{ padding: "16px 28px", borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
+      <div style={{ padding: "12px 28px", borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
         <div style={{ fontSize: 9, letterSpacing: "0.25em", color: C.muted, textTransform: "uppercase", textAlign: "center" }}>
           Curated by Anant Bhoomi · Est. MMXXVI
         </div>
@@ -1166,10 +1208,16 @@ export default function App() {
   }, [phase]);
 
   // ── §11b DATA FETCH — weather + heritage + Amadeus on every arrival ──
+  // Uses a ref to always read the latest selectedDest, avoiding stale closures
+  const destRef = useRef(selectedDest);
+  destRef.current = selectedDest;
+
   useEffect(() => {
-    if (arrivalId === 0) return;
+    if (arrivalId === 0 || phase < 3) return; // only fetch after landing
     let cancelled = false;
-    const dest = selectedDest;
+    const dest = destRef.current; // always fresh
+
+    console.log("[Anant Bhoomi] §11b firing for", dest.name, "arrivalId:", arrivalId);
 
     // Weather (always resolves — mock fallback built in)
     fetchDestinationWeather(dest.coords[1], dest.coords[0]).then((data) => {
@@ -1192,7 +1240,7 @@ export default function App() {
     }
 
     return () => { cancelled = true; };
-  }, [arrivalId, selectedDest, origin]);
+  }, [arrivalId, phase]);
 
   // ── D3 RENDER ──
   const drawMap = useCallback(() => {
